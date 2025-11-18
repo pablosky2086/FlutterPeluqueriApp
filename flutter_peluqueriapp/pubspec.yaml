@@ -27,30 +27,18 @@ dev_dependencies:
 # -----------------------------------------------------------
 flutter:
   uses-material-design: true
-  # Asegúrate de descomentar y listar tu carpeta de assets si la usas
-  # assets:
-  #   - assets/images/ 
+  assets:
+    - assets/splash.png  # <-- aquí declaras tu asset
 
 # -----------------------------------------------------------
-# Configuración de flutter_native_splash (¡Asegúrate de la indentación!)
+# Configuración de flutter_native_splash
 # -----------------------------------------------------------
 flutter_native_splash:
-  color: "#f4b95b" 
-    # color_dark: "#000000" 
-
-    # La imagen PNG a mostrar 
-    # ¡IMPORTANTE! La ruta 'assets/images/splash.png' debe ser válida.
-  image: assets/splash.png 
+  color: "#f4b95b"
+  image: assets/splash.png
+  android: true
+  ios: true
+  web: true
   android_12:
-    # El fondo de la pantalla de inicio
-    color: "#f4b95b" 
-    # color_dark: "#000000" 
-
-    # La imagen PNG a mostrar 
-    # ¡IMPORTANTE! La ruta 'assets/images/splash.png' debe ser válida.
-    image: assets/splash.png 
-    # image_dark: assets/images/splash_dark.png
-
-    # Opcional: Imagen de fondo (descomentar si se usa)
-    # background_image: "assets/images/splash.png" 
-    # background_image_dark: "assets/background_dark.png"
+    color: "#f4b95b"
+    image: assets/splash.png

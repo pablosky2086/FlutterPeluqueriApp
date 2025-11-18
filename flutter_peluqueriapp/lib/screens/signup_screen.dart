@@ -19,107 +19,100 @@ class _SignupScreenState extends State<SignupScreen> {
         title: const Text("PeluqueriApp"),
         backgroundColor: const Color(0xFFF4B95B),
       ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              "Crear Cuenta",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 30),
-
-            // Usuario
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(
-                labelText: "Nombre de usuario",
-                border: OutlineInputBorder(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/splash.png',
+                    width: 60,
+                    height: 60,
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      "Crear Cuenta",
+                      style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
-            ),
+              const SizedBox(height: 30),
 
-            const SizedBox(height: 20),
-
-            // Contraseña
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Contraseña",
-                border: OutlineInputBorder(),
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(
+                  labelText: "Nombre de usuario",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Repetir contraseña
-            TextField(
-              controller: repeatPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Repetir contraseña",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 20),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: "Contraseña",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Botón Aceptar
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF4B95B),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+              const SizedBox(height: 20),
+              TextField(
+                controller: repeatPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: "Repetir contraseña",
+                  border: OutlineInputBorder(),
+                ),
               ),
-              onPressed: () {
-                // Aquí iría la validación que quieras
-                String user = usernameController.text;
-                String pass = passwordController.text;
-                String pass2 = repeatPasswordController.text;
+              const SizedBox(height: 30),
 
-                if (user.isEmpty || pass.isEmpty || pass2.isEmpty) {
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF4B95B),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  String user = usernameController.text;
+                  String pass = passwordController.text;
+                  String pass2 = repeatPasswordController.text;
+
+                  if (user.isEmpty || pass.isEmpty || pass2.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Rellena todos los campos")),
+                    );
+                    return;
+                  }
+
+                  if (pass != pass2) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Las contraseñas no coinciden")),
+                    );
+                    return;
+                  }
+
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Rellena todos los campos")),
+                    const SnackBar(content: Text("Cuenta creada correctamente")),
                   );
-                  return;
-                }
-
-                if (pass != pass2) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Las contraseñas no coinciden")),
-                  );
-                  return;
-                }
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Cuenta creada correctamente")),
-                );
-              },
-              child: const Text(
-                "Aceptar",
-                style: TextStyle(fontSize: 18),
+                },
+                child: const Text("Crear usuario", style: TextStyle(fontSize: 18)),
               ),
-            ),
+              const SizedBox(height: 10),
 
-            const SizedBox(height: 10),
-
-            // Botón Cancelar
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancelar", style: TextStyle(fontSize: 18)),
               ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                "Cancelar",
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
