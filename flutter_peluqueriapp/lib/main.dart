@@ -24,8 +24,8 @@ class _MainAppState extends State<MainApp> {
   }
 
   Future<void> _initializeData() async {
-    await Future.delayed(const Duration(seconds: 3)); 
-    
+    await Future.delayed(const Duration(seconds: 1));
+
     FlutterNativeSplash.remove();
   }
 
@@ -35,9 +35,9 @@ class _MainAppState extends State<MainApp> {
       title: 'App Peluquería',
       home: Scaffold(
         body: Center(
-          
+          child: Text("App cargada"),
         ),
-     ),
-  );
+      ),
+    );
   }
 }
