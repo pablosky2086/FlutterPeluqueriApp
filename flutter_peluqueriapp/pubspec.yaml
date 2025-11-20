@@ -28,7 +28,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/splash.png  # <-- aquí declaras tu asset
+    - assets/   # <-- incluye todos los archivos dentro de la carpeta assets
 
 # -----------------------------------------------------------
 # Configuración de flutter_native_splash
