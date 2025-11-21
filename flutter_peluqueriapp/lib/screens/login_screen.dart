@@ -27,13 +27,18 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Column(
                     children: [
-                      Image.asset('assets/splash.png', width: 100, height: 100),
+                      // --------- FOTO MÁS GRANDE ---------
+                      SizedBox(
+                        height: 210, // altura más grande
+                        width: 210,
+                        child: Image.asset('assets/splash.png', fit: BoxFit.cover),
+                      ),
                       const SizedBox(height: 16),
                       const Text(
                         "Iniciar Sesión",

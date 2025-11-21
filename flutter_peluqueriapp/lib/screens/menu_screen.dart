@@ -25,7 +25,7 @@ class MenuScreen extends StatelessWidget {
                   const Spacer(flex: 2),
 
                   SizedBox(
-                    height: 160,
+                    height: 300,
                     child: Image.asset(
                       "assets/splash.png",
                       fit: BoxFit.contain,
