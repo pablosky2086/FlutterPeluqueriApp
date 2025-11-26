@@ -34,7 +34,6 @@ class MenuScreen extends StatelessWidget {
 
                   const SizedBox(height: 40),
 
-                  // Botón Servicios
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF4B95B),
@@ -62,7 +61,6 @@ class MenuScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Botón Clientes / Perfil
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF4B95B),
