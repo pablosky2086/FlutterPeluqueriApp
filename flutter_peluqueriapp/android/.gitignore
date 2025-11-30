@@ -1,14 +1,66 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IntelliJ / VSCode
+.idea/
+*.iml
+.vscode/
+
+# Misc
+*.log
+*.tmp
+
+# Android
+android/app/debug
+android/app/profile
+android/app/release
+
 gradle-wrapper.jar
 /.gradle
 /captures/
 /gradlew
 /gradlew.bat
 /local.properties
-GeneratedPluginRegistrant.java
 .cxx/
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
+# Android Generated
+android/app/src/main/java/**/GeneratedPluginRegistrant.java
+
+# Keystore (never commit)
 key.properties
 **/*.keystore
 **/*.jks
+
+# iOS
+ios/Flutter/.last_build_id
+ios/Flutter/Flutter.podspec
+ios/.symlinks/
+ios/Pods/
+ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Windows
+windows/flutter/ephemeral/
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.h
+windows/flutter/generated_plugins.cmake
+
+# Linux
+linux/flutter/ephemeral/
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugin_registrant.h
+linux/flutter/generated_plugins.cmake
+
+# Web
+web/generated/
+
+# Coverage
+coverage/
