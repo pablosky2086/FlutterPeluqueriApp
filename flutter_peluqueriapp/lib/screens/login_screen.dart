@@ -32,15 +32,14 @@ class _LoginScreenState extends State<LoginScreen> {
           // 2️⃣ IMAGEN DE PELUQUERO PEGADA A LA IZQUIERDA, SIN OPACIDAD
           Align(
             alignment: Alignment.bottomLeft,
-            child: Image.asset(
-              'assets/peluquero.png',
-              fit: BoxFit.cover,
-              height:
-                  MediaQuery.of(context).size.height *
-                  0.9, // ocupa casi toda la altura
-              width:
-                  MediaQuery.of(context).size.width *
-                  0.5, // ocupa mitad de ancho
+            child: Opacity(
+              opacity: 0.75, // ⭐ Ajusta entre 0.0 y 1.0
+              child: Image.asset(
+                'assets/peluquero.png',
+                fit: BoxFit.cover,
+                height: MediaQuery.of(context).size.height * 0.9,
+                width: MediaQuery.of(context).size.width * 0.85,
+              ),
             ),
           ),
 
