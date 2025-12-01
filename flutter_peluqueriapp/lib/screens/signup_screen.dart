@@ -40,7 +40,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orangeAccent,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 32),

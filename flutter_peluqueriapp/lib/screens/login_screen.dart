@@ -18,7 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1️⃣ DEGRADADO DE FONDO (ABAJO DEL TODO)
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -29,11 +28,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // 2️⃣ IMAGEN DE PELUQUERO PEGADA A LA IZQUIERDA, SIN OPACIDAD
           Align(
             alignment: Alignment.bottomLeft,
             child: Opacity(
-              opacity: 0.75, // ⭐ Ajusta entre 0.0 y 1.0
+              opacity: 0.35,
               child: Image.asset(
                 'assets/peluquero.png',
                 fit: BoxFit.cover,
@@ -71,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orangeAccent,
+                        color: Colors.black,
                       ),
                     ),
 
@@ -147,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         "¿No tienes cuenta? Crear cuenta",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.orangeAccent,
+                          color: Colors.black,
                         ),
                       ),
                     ),
