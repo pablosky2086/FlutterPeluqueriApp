@@ -58,71 +58,54 @@ class _CitasScreenState extends State<CitasScreen> {
         padding: const EdgeInsets.only(bottom: 16),
         child: Column(
           children: [
-            Container(
-              height: 120,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (_, index) {
-                  final s = widget.services[index];
-                  final bool isSelected = s.name == selectedService.name;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedService = s;
-                        selectedHour = null;
-                      });
-                    },
-                    child: Container(
-                      width: 200,
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.orangeAccent : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.orangeAccent, width: isSelected ? 0 : 1.5),
-                        boxShadow: [
-                          if (isSelected)
-                            BoxShadow(
-                              color: Colors.orangeAccent.withOpacity(0.25),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(10),
+            // Dropdown de servicios con imagen y scroll
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orangeAccent, width: 1.5),
+                ),
+                child: DropdownButton<ServiceCategory>(
+                  value: selectedService,
+                  isExpanded: true,
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.orangeAccent),
+                  underline: const SizedBox(),
+                  dropdownColor: Colors.white,
+                  menuMaxHeight: 300,
+                  items: widget.services.map((s) {
+                    return DropdownMenuItem<ServiceCategory>(
+                      value: s,
                       child: Row(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                             child: Image.asset(
                               s.image,
-                              width: 60,
-                              height: 60,
+                              width: 50,
+                              height: 50,
                               fit: BoxFit.cover,
                             ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   s.name,
-                                  style: TextStyle(
-                                    fontSize: 14,
+                                  style: const TextStyle(
+                                    color: Colors.orangeAccent,
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected ? Colors.white : Colors.orangeAccent,
                                   ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 6),
                                 Text(
                                   "${s.price} € • ${s.duration}",
-                                  style: TextStyle(
+                                  style: const TextStyle(
+                                    color: Colors.black54,
                                     fontSize: 12,
-                                    color: isSelected ? Colors.white70 : Colors.black54,
                                   ),
                                 ),
                               ],
@@ -130,13 +113,21 @@ class _CitasScreenState extends State<CitasScreen> {
                           ),
                         ],
                       ),
-                    ),
-                  );
-                },
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemCount: widget.services.length,
+                    );
+                  }).toList(),
+                  onChanged: (service) {
+                    if (service != null) {
+                      setState(() {
+                        selectedService = service;
+                        selectedHour = null;
+                      });
+                    }
+                  },
+                ),
               ),
             ),
+
+            // Calendario
             Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -155,6 +146,7 @@ class _CitasScreenState extends State<CitasScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -174,6 +166,8 @@ class _CitasScreenState extends State<CitasScreen> {
               ),
             ),
             const SizedBox(height: 10),
+
+            // Horas disponibles
             availableHours.isEmpty
                 ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -219,7 +213,10 @@ class _CitasScreenState extends State<CitasScreen> {
                       }).toList(),
                     ),
                   ),
+
             const SizedBox(height: 20),
+
+            // Resumen y botón confirmar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
