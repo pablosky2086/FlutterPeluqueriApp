@@ -8,12 +8,15 @@ class ClientesScreen extends StatefulWidget {
 }
 
 class _ClientesScreenState extends State<ClientesScreen> {
-  final TextEditingController nameController =
-      TextEditingController(text: "Sergi Caravaca");
-  final TextEditingController phoneController =
-      TextEditingController(text: "612 345 678");
-  final TextEditingController emailController =
-      TextEditingController(text: "sergi@gmail.com");
+  final TextEditingController nameController = TextEditingController(
+    text: "Sergi Caravaca",
+  );
+  final TextEditingController phoneController = TextEditingController(
+    text: "612 345 678",
+  );
+  final TextEditingController emailController = TextEditingController(
+    text: "sergi@gmail.com",
+  );
 
   String gender = "Hombre";
 
@@ -51,8 +54,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.orangeAccent.withOpacity(0.3),
-                        backgroundImage:
-                            const AssetImage("assets/profile.jpg"),
+                        backgroundImage: const AssetImage("assets/profile.jpg"),
                       ),
                       Positioned(
                         bottom: 0,
@@ -63,109 +65,80 @@ class _ClientesScreenState extends State<ClientesScreen> {
                             decoration: BoxDecoration(
                               color: Colors.orangeAccent,
                               shape: BoxShape.circle,
-                              border:
-                                  Border.all(color: Colors.white, width: 2),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
                             padding: const EdgeInsets.all(6),
-                            child: const Icon(Icons.edit,
-                                size: 20, color: Colors.white),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 18),
 
                   // CAMPOS DE TEXTO Y DROPDOWN
                   _buildCompactTextField(
-                      nameController, "Nombre", Icons.person),
-                  const SizedBox(height: 10),
-                  _buildCompactTextField(phoneController, "Teléfono",
-                      Icons.phone,
-                      keyboard: TextInputType.phone),
+                    nameController,
+                    "Nombre",
+                    Icons.person,
+                  ),
                   const SizedBox(height: 10),
                   _buildCompactTextField(
-                      emailController, "Email", Icons.email,
-                      keyboard: TextInputType.emailAddress),
+                    phoneController,
+                    "Teléfono",
+                    Icons.phone,
+                    keyboard: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildCompactTextField(
+                    emailController,
+                    "Email",
+                    Icons.email,
+                    keyboard: TextInputType.emailAddress,
+                  ),
                   const SizedBox(height: 10),
 
-                  DropdownButtonFormField<String>(
+                  // Alergias
+                  TextField(
                     decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orangeAccent,
+                      ),
+                      labelText: "Alergias",
+                      hintText: "Ej: Penicilina, látex, frutos secos…",
                       filled: true,
                       fillColor: Colors.white,
-                      labelText: "Género",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    value: gender,
-                    items: ["Hombre", "Mujer", "Otro"]
-                        .map((g) =>
-                            DropdownMenuItem(value: g, child: Text(g)))
-                        .toList(),
-                    onChanged: (v) => setState(() => gender = v!),
+                    maxLines: 2,
                   ),
-                  const SizedBox(height: 18),
 
-                  // CUADRO DE ALÉRGENOS
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.orangeAccent.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                  const SizedBox(height: 10),
+
+                  // Observaciones
+                  TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.notes, color: Colors.orangeAccent),
+                      labelText: "Observaciones",
+                      hintText: "Notas sobre el cliente, preferencias…",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Alergias y Sensibilidades",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orangeAccent,
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: Colors.redAccent),
-                            SizedBox(width: 8),
-                            Text("Alergia al amoníaco",
-                                style: TextStyle(fontSize: 16)),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: Colors.redAccent),
-                            SizedBox(width: 8),
-                            Text("Piel sensible a tintes",
-                                style: TextStyle(fontSize: 16)),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.green),
-                            SizedBox(width: 8),
-                            Text("Sin alergia a keratina",
-                                style: TextStyle(fontSize: 16)),
-                          ],
-                        ),
-                      ],
-                    ),
+                    maxLines: 4,
                   ),
+
                   const SizedBox(height: 20),
 
                   // BOTÓN GUARDAR
@@ -179,7 +152,9 @@ class _ClientesScreenState extends State<ClientesScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         textStyle: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -198,9 +173,12 @@ class _ClientesScreenState extends State<ClientesScreen> {
     );
   }
 
-  Widget _buildCompactTextField(TextEditingController controller,
-      String label, IconData icon,
-      {TextInputType keyboard = TextInputType.text}) {
+  Widget _buildCompactTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
@@ -209,8 +187,9 @@ class _ClientesScreenState extends State<ClientesScreen> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
       ),
       keyboardType: keyboard,
       style: const TextStyle(fontSize: 15),
