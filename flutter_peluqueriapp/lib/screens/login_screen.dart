@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_peluqueriapp/services/auth_service.dart';
+import 'package:provider/provider.dart';
 import 'signup_screen.dart';
 import 'menu_screen.dart';
 
@@ -15,6 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final auth = context.read<AuthService>();
+
     return Scaffold(
       body: Stack(
         children: [
@@ -119,13 +124,28 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MenuScreen(),
-                          ),
+                      onPressed: () async{
+                        bool success = await auth.login(
+                          usernameController.text,
+                          passwordController.text,
                         );
+                        print("Login success: $success");
+                        if (success) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MenuScreen(),
+                            ),
+                          );
+                        }
+                        else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Error de inicio de sesión"),
+                            ),
+                          );
+                        }
+                        
                       },
                       child: const Text("Iniciar Sesión"),
                     ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_peluqueriapp/services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -15,6 +17,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final auth = context.read<AuthService>();
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -110,7 +115,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async{
                       String user = usernameController.text;
                       String pass = passwordController.text;
                       String pass2 = repeatPasswordController.text;
@@ -133,6 +138,16 @@ class _SignupScreenState extends State<SignupScreen> {
                         return;
                       }
 
+                      bool success = await auth.register(user, pass);
+                      print("Signup success: $success");
+                      if (!success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Error al crear la cuenta"),
+                          ),
+                        );
+                        return;
+                      }
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text("Cuenta creada correctamente"),
