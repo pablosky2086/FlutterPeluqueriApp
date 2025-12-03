@@ -58,42 +58,21 @@ class AuthService {
       return false;
     }
   }
-}
 
-  /*Future<bool> register(String email, String password) async {
-    final url = Uri.parse('$_baseUrl/api/auth/register');
-    try {
-      final response = await http.post(url, body: {
-        'email': email,
-        'password': password,
-      });
-      if (response.statusCode == 200) {
-        // Registration successful
-        return true;
-      } else {
-        // Registration failed
-        return false;
-      }
-    } catch (e) {
-      print('Error during registration: $e');
-      return false;
+
+  //Funcion para dar los headers con el token
+  Future<Map<String, String>> getAuthHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('accessToken') ?? '';
+    final tokenType = prefs.getString('tokenType') ?? '';
+
+    if (accessToken.isEmpty || tokenType.isEmpty) {
+      throw Exception('Token de autenticación no encontrado');
     }
+
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': '$tokenType $accessToken',
+    };
   }
-
-
 }
-
-
-class AuthService {
-  final String _baseUrl = dotenv.env['API_URL'] ?? 'https://default-api-url.com';
-
-  Future<http.Response> login(String username, String password) {
-    final url = Uri.parse('$_baseUrl/login');
-    return http.post(url, body: {'username': username, 'password': password});
-  }
-
-  Future<http.Response> register(String username, String password) {
-    final url = Uri.parse('$_baseUrl/register');
-    return http.post(url, body: {'username': username, 'password': password});
-  }
-}*/
