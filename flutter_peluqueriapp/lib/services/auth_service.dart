@@ -38,6 +38,12 @@ class AuthService {
     }
   }
 
+  // Obtener el ID del usuario almacenado en SharedPreferences
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('id');
+  }
+
   Future<bool> register(String email, String password) async {
     final url = Uri.parse('$_baseUrl/api/auth/register/cliente');
     try {

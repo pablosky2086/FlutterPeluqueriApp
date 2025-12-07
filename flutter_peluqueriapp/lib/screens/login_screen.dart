@@ -14,6 +14,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+      bool _obscurePassword = true;
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -21,27 +24,31 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthService>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFFF3E0), Color(0xFFFDEBCF)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFFFF3E0), Color(0xFFFDEBCF)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
             ),
           ),
 
-          Align(
-            alignment: Alignment.bottomLeft,
+          Positioned(
+            top: 50,
+            left: -30,
             child: Opacity(
               opacity: 0.35,
               child: Image.asset(
                 'assets/peluquero.png',
                 fit: BoxFit.cover,
                 height: MediaQuery.of(context).size.height * 0.9,
-                width: MediaQuery.of(context).size.width * 0.85,
+                width: MediaQuery.of(context).size.width * 0.99,
               ),
             ),
           ),
@@ -97,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     TextField(
                       controller: passwordController,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.lock),
                         labelText: "Contraseña",
@@ -107,6 +114,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        )
                       ),
                     ),
 
@@ -165,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         "¿No tienes cuenta? Crear cuenta",
                         style: TextStyle(
                           fontSize: 16,
+                          decoration: TextDecoration.underline,
                           color: Colors.black,
                         ),
                       ),

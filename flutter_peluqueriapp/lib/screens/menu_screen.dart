@@ -9,7 +9,7 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Lista de servicios directamente aquí
-    final servicesList = [
+    /*final servicesList = [
       ServiceCategory(
         name: 'Peinado',
         price: '5',
@@ -54,7 +54,7 @@ class MenuScreen extends StatelessWidget {
         image: 'assets/tinte.jpg',
         description: 'Cambio de color profesional.',
       ),
-    ];
+    ];*/
 
     return Scaffold(
       body: Container(
@@ -92,7 +92,7 @@ class MenuScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  ElevatedButton(
+                  /*ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF4B95B),
                       minimumSize: const Size(double.infinity, 55),
@@ -101,11 +101,11 @@ class MenuScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => CitasScreen(services: servicesList)),
+                        MaterialPageRoute(builder: (_) => CitasScreen(services: [])),
                       );
                     },
                     child: const Text("Citas", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  ),
+                  ),*/
 
                   const SizedBox(height: 20),
 

@@ -1,37 +1,28 @@
-import 'dart:convert';
-
 class Servicio {
-    int id;
-    String nombre;
-    String descripcion;
-    int duracion;
-    int precio;
+  final int id;
+  final String nombre;
+  final String descripcion;
+  final int duracion;
+  final double precio;
+  final int tipoId;
 
-    Servicio({
-        required this.id,
-        required this.nombre,
-        required this.descripcion,
-        required this.duracion,
-        required this.precio,
-    });
+  Servicio({
+    required this.id,
+    required this.nombre,
+    required this.descripcion,
+    required this.duracion,
+    required this.precio,
+    required this.tipoId,
+  });
 
-    factory Servicio.fromJson(String str) => Servicio.fromMap(json.decode(str));
-
-    String toJson() => json.encode(toMap());
-
-    factory Servicio.fromMap(Map<String, dynamic> json) => Servicio(
-        id: json["id"],
-        nombre: json["nombre"],
-        descripcion: json["descripcion"],
-        duracion: json["duracion"],
-        precio: json["precio"],
+  factory Servicio.fromJson(Map<String, dynamic> json) {
+    return Servicio(
+      id: json["id"],
+      nombre: json["nombre"],
+      descripcion: json["descripcion"],
+      duracion: json["duracion"],
+      precio: (json["precio"] as num).toDouble(),
+      tipoId: json["tipoServicio"]["id"], // ← clave correcta
     );
-
-    Map<String, dynamic> toMap() => {
-        "id": id,
-        "nombre": nombre,
-        "descripcion": descripcion,
-        "duracion": duracion,
-        "precio": precio,
-    };
+  }
 }

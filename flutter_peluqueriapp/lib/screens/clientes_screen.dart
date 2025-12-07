@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_peluqueriapp/services/cliente_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ClientesScreen extends StatefulWidget {
   const ClientesScreen({super.key});
@@ -8,17 +10,69 @@ class ClientesScreen extends StatefulWidget {
 }
 
 class _ClientesScreenState extends State<ClientesScreen> {
-  final TextEditingController nameController = TextEditingController(
-    text: "Sergi Caravaca",
-  );
-  final TextEditingController phoneController = TextEditingController(
-    text: "612 345 678",
-  );
-  final TextEditingController emailController = TextEditingController(
-    text: "sergi@gmail.com",
-  );
+  final ClienteService clienteService = ClienteService();
 
-  String gender = "Hombre";
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController alergiasController = TextEditingController();
+  final TextEditingController observacionesController = TextEditingController();
+
+  // Estado de carga inicial de datos
+  bool isLoading = true;
+  int? userId;
+
+  // Cargar datos del cliente al iniciar el estado
+  @override
+  void initState() {
+    super.initState();
+    _loadClientData();
+  }
+
+  Future<void> _loadClientData() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getInt('id');
+    final clienteInfo = await clienteService.getClienteInfo(userId!);
+    if (clienteInfo != null) {
+      setState(() {
+        nameController.text = clienteInfo['nombreCompleto'] ?? '';
+        phoneController.text = clienteInfo['telefono'] ?? '';
+        emailController.text = clienteInfo['email'] ?? '';
+        alergiasController.text = clienteInfo['alergenos'] ?? '';
+        observacionesController.text = clienteInfo['observaciones'] ?? '';
+        isLoading = false;
+      });
+    } else {
+      // Manejar el error de carga de datos
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> guardarCambios() async {
+    if (userId == null) return;
+
+    final payload = {
+      "nombreCompleto": nameController.text,
+      "telefono": phoneController.text,
+      "email": emailController.text,
+      "alergenos": alergiasController.text,
+      "observaciones": observacionesController.text,
+    };
+
+    final success = await clienteService.updateCliente(userId!, payload);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? "Cambios guardados correctamente"
+              : "Error al guardar cambios",
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +158,26 @@ class _ClientesScreenState extends State<ClientesScreen> {
 
                   // Alergias
                   TextField(
+                    controller: observacionesController, // ← IMPORTANTE
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.notes, color: Colors.orangeAccent),
+                      labelText: "Observaciones",
+                      hintText: "Notas sobre el cliente, preferencias…",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    maxLines: 4,
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Observaciones
+                  TextField(
+                    controller: alergiasController, // ← IMPORTANTE
                     decoration: InputDecoration(
                       prefixIcon: Icon(
                         Icons.warning_amber_rounded,
@@ -119,24 +193,6 @@ class _ClientesScreenState extends State<ClientesScreen> {
                       ),
                     ),
                     maxLines: 2,
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Observaciones
-                  TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.notes, color: Colors.orangeAccent),
-                      labelText: "Observaciones",
-                      hintText: "Notas sobre el cliente, preferencias…",
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    maxLines: 4,
                   ),
 
                   const SizedBox(height: 20),
@@ -156,11 +212,12 @@ class _ClientesScreenState extends State<ClientesScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      onPressed: () {
+                      onPressed: guardarCambios,
+                      /*onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Cambios guardados")),
                         );
-                      },
+                      },*/
                       child: const Text("Guardar cambios"),
                     ),
                   ),

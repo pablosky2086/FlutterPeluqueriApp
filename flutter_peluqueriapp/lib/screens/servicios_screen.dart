@@ -1,4 +1,102 @@
 import 'package:flutter/material.dart';
+import '../models/tipo_servicio_model.dart';
+import '../models/servicio_model.dart';
+import '../services/tipo_servicio_service.dart';
+import '../services/servicio_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+class ServiciosScreen extends StatefulWidget {
+  const ServiciosScreen({super.key});
+
+  @override
+  State<ServiciosScreen> createState() => _ServiciosScreenState();
+}
+
+class _ServiciosScreenState extends State<ServiciosScreen> {
+  List<TipoServicio> tipos = [];
+  List<Servicio> servicios = [];
+  Map<int, List<Servicio>> agrupados = {};
+
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    cargarDatos();
+  }
+
+  Future<void> cargarDatos() async {
+    final tipoService = TipoServicioService();
+    final servService = ServicioService();
+
+    tipos = await tipoService.getTipos();
+    servicios = await servService.getServicios();
+
+    // AGRUPAR SERVICIOS POR TIPO
+    agrupados = {};
+    for (var tipo in tipos) {
+      agrupados[tipo.id] = servicios.where((s) => s.tipoId == tipo.id).toList();
+    }
+
+    setState(() {
+      loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print(tipos);
+    print(agrupados);
+    if (loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Servicios")),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: tipos.length,
+              itemBuilder: (_, i) {
+                final tipo = tipos[i];
+                final serviciosDeEsteTipo = agrupados[tipo.id] ?? [];
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: ExpansionTile(
+                    title: Text(tipo.nombre),
+                    leading: Image.network(
+                      "${dotenv.env['API_URL']}${tipo.urlImg}",
+                      width: 40,
+                      height: 40,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.image),
+                    ),
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: serviciosDeEsteTipo.length,
+                        itemBuilder: (_, j) {
+                          final s = serviciosDeEsteTipo[j];
+
+                          return ListTile(
+                            title: Text(s.nombre),
+                            subtitle: Text("${s.precio} € - ${s.duracion} min"),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+
+/*import 'package:flutter/material.dart';
 import 'citas_screen.dart';
 
 class ServiceCategory {
@@ -334,3 +432,4 @@ class ServiceCard extends StatelessWidget {
     );
   }
 }
+*/
