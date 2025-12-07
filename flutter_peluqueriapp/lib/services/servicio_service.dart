@@ -29,4 +29,26 @@ class ServicioService {
       return [];
     }
   }
+
+  Future<List<Servicio>> buscarServiciosPorNombre(String nombre) async {
+  final url = Uri.parse("$baseUrl/api/servicios/nombre/$nombre");
+  final headers = await auth.getAuthHeaders();
+
+  try {
+    final res = await http.get(url, headers: headers);
+
+    print("BUSCAR status: ${res.statusCode}");
+    print("BUSCAR body: ${res.body}");
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as List;
+      return data.map((e) => Servicio.fromJson(e)).toList();
+    }
+    return [];
+  } catch (e) {
+    print("Error buscando servicios: $e");
+    return [];
+  }
+}
+
 }
