@@ -153,6 +153,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                     "Email",
                     Icons.email,
                     keyboard: TextInputType.emailAddress,
+                    enabled: false
                   ),
                   const SizedBox(height: 10),
 
@@ -235,9 +236,11 @@ class _ClientesScreenState extends State<ClientesScreen> {
     String label,
     IconData icon, {
     TextInputType keyboard = TextInputType.text,
+    bool enabled = true,
   }) {
     return TextField(
       controller: controller,
+      enabled: enabled,
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         labelText: label,

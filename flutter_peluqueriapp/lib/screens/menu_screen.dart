@@ -90,7 +90,7 @@ class MenuScreen extends StatelessWidget {
                     child: const Text("Servicios", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ),
 
-                  const SizedBox(height: 20),
+                  //const SizedBox(height: 20),
 
                   /*ElevatedButton(
                     style: ElevatedButton.styleFrom(

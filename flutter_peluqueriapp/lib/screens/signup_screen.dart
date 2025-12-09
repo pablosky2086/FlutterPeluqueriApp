@@ -57,7 +57,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     controller: usernameController,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.person),
-                      labelText: "Nombre de usuario",
+                      labelText: "Email",
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(

@@ -7,6 +7,7 @@ import 'package:flutter_peluqueriapp/models/servicio_model.dart';
 import 'package:flutter_peluqueriapp/models/tipo_servicio_model.dart';
 import 'package:flutter_peluqueriapp/services/servicio_service.dart';
 import 'package:flutter_peluqueriapp/services/tipo_servicio_service.dart';
+import 'package:flutter_peluqueriapp/screens/citas_screen.dart';
 
 class ServiciosScreen extends StatefulWidget {
   const ServiciosScreen({super.key});
@@ -233,17 +234,43 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
 
   // Tile de un servicio (tanto para resultados como dentro de un tipo)
   Widget _buildServicioTile(Servicio s) {
-    return ListTile(
-      leading: const Icon(Icons.spa, color: Colors.orangeAccent),
-      title: Text(
-        s.nombre,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+  return ListTile(
+    title: Text(
+      s.nombre,
+      style: const TextStyle(
+        color: Colors.orangeAccent,
+        fontWeight: FontWeight.bold,
       ),
-      subtitle: Text("${s.precio} € · ${s.duracion} h"),
-      // aquí más adelante puedes navegar a CitasScreen pasando el servicio
-      onTap: () {
-        // TODO: Navigator.push(...) a CitasScreen
+    ),
+    subtitle: Text("${s.precio} € • ${s.duracion} min"),
+    trailing: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFF4B95B),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CitasScreen(
+              services: servicios,      // ← lista completa
+              initialService: s,        // ← servicio seleccionado
+            ),
+          ),
+        );
       },
-    );
-  }
+      child: const Text(
+        "Reservar",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
+}
+
 }
