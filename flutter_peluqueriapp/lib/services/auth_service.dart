@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'secure_storage.dart';
 
 class AuthService {
   final String _baseUrl = dotenv.env['API_URL'] ?? 'http://localhost:8080';
+  final SecureStorageService _storage = SecureStorageService();
 
   Future <bool> login(String email, String password) async {
     final url = Uri.parse('$_baseUrl/api/auth/login');
@@ -21,12 +23,7 @@ class AuthService {
       if (response.statusCode == 200) {
         // Login successful
         final data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', data['accessToken']);
-        await prefs.setString('tokenType', data['tokenType']);
-        await prefs.setInt('id', data['id']);
-        await prefs.setString('username', data['username']);
-
+        await _storage.saveToken(data['accessToken'], data['tokenType']);
         return true;
       } else {
         // Login failed
@@ -81,4 +78,18 @@ class AuthService {
       'Authorization': '$tokenType $accessToken',
     };
   }
+
+  // Función para comprobar si el token es válido
+  Future<bool> checkToken() async {
+  try {
+    final headers = await getAuthHeaders();
+    final url = Uri.parse('$_baseUrl/api/auth/me');
+
+    final response = await http.get(url, headers: headers);
+    return response.statusCode == 200;
+  } catch (_) {
+    return false;
+  }
+}
+
 }
