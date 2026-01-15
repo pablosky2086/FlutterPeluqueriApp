@@ -24,6 +24,7 @@ class AuthService {
         // Login successful
         final data = jsonDecode(response.body);
         await _storage.saveToken(data['accessToken'], data['tokenType']);
+        print(data);
         return true;
       } else {
         // Login failed
@@ -65,12 +66,15 @@ class AuthService {
 
   //Funcion para dar los headers con el token
   Future<Map<String, String>> getAuthHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('accessToken') ?? '';
-    final tokenType = prefs.getString('tokenType') ?? '';
+//    final prefs = await SharedPreferences.getInstance();
+//    final accessToken = prefs.getString('accessToken') ?? '';
+//    final tokenType = prefs.getString('tokenType') ?? '';
 
-    if (accessToken.isEmpty || tokenType.isEmpty) {
-      throw Exception('Token de autenticación no encontrado');
+    final accessToken = await _storage.getAccessToken();
+    final tokenType = await _storage.getTokenType();
+
+    if (accessToken == null || tokenType == null) {
+      throw Exception('No access token or token type found');
     }
 
     return {
@@ -83,8 +87,7 @@ class AuthService {
   Future<bool> checkToken() async {
   try {
     final headers = await getAuthHeaders();
-    final url = Uri.parse('$_baseUrl/api/auth/me');
-
+    final url = Uri.parse('$_baseUrl/api/servicios/');
     final response = await http.get(url, headers: headers);
     return response.statusCode == 200;
   } catch (_) {

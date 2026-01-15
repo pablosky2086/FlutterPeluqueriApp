@@ -34,7 +34,7 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // Aquí puedes agregar tus providers si los tienes
-        Provider<AuthService>(create: (_) => AuthService()),
+        // Provider<AuthService>(create: (_) => AuthService()),
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
       ],
       child: MaterialApp(
@@ -48,24 +48,22 @@ class MainApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: Consumer<AuthProvider>(
-  builder: (_, auth, __) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            Text(
-              "Estado auth: ${auth.status}",
-              style: const TextStyle(fontSize: 18),
-            ),
-          ],
+          builder: (_, auth, __) {
+            if (auth.status == AuthStatus.checking) {
+              print('Checking auth status...');
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (auth.status == AuthStatus.authenticated) {
+              print('User is authenticated, navigating to MenuScreen...');
+              return const MenuScreen();
+            } else {
+              print('User is not authenticated, navigating to LoginScreen...');
+              return const LoginScreen();
+            } 
+          },
         ),
-      ),
-    );
-  },
-),
       ),
     );
   }
