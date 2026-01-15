@@ -1,41 +1,54 @@
+// path: lib/screens/signup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_peluqueriapp/services/auth_service.dart';
 
-class SignupScreen extends StatefulWidget {
+// Importamos Providers y Servicios
+import 'package:flutter_peluqueriapp/services/auth_service.dart';
+import 'package:flutter_peluqueriapp/providers/register_form_provider.dart';
+
+class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // Envolvemos el cuerpo en el Provider del formulario de registro
+      body: ChangeNotifierProvider(
+        create: (_) => RegisterFormProvider(),
+        child: const _RegisterFormContent(),
+      ),
+    );
+  }
 }
 
-class _SignupScreenState extends State<SignupScreen> {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController repeatPasswordController =
-      TextEditingController();
+class _RegisterFormContent extends StatelessWidget {
+  const _RegisterFormContent();
 
   @override
   Widget build(BuildContext context) {
+    // Accedemos al provider del formulario
+    final registerForm = Provider.of<RegisterFormProvider>(context);
 
-    final auth = context.read<AuthService>();
-
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFF3E0), Color(0xFFFDEBCF)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    return Container(
+      // Decoración de fondo igual que el login
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFFFF3E0), Color(0xFFFDEBCF)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              // Conectamos la Key para poder validar
+              key: registerForm.formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // CABECERA
                   Column(
                     children: [
                       Image.asset('assets/splash.png', width: 100, height: 100),
@@ -52,9 +65,12 @@ class _SignupScreenState extends State<SignupScreen> {
                     ],
                   ),
 
-                  // Usuario
-                  TextField(
-                    controller: usernameController,
+                  // ------------------------------------------------
+                  // INPUT EMAIL
+                  // ------------------------------------------------
+                  TextFormField(
+                    autocorrect: false,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.person),
                       labelText: "Email",
@@ -65,13 +81,24 @@ class _SignupScreenState extends State<SignupScreen> {
                         borderSide: BorderSide.none,
                       ),
                     ),
+                    onChanged: (value) => registerForm.email = value,
+                    validator: (value) {
+                       String pattern =
+                        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                      RegExp regExp = RegExp(pattern);
+                      return regExp.hasMatch(value ?? '')
+                          ? null
+                          : 'El correo no es válido';
+                    },
                   ),
                   const SizedBox(height: 20),
 
-                  // Contraseña
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
+                  // ------------------------------------------------
+                  // INPUT PASSWORD
+                  // ------------------------------------------------
+                  TextFormField(
+                    autocorrect: false,
+                    obscureText: registerForm.obscurePassword,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock),
                       labelText: "Contraseña",
@@ -81,14 +108,30 @@ class _SignupScreenState extends State<SignupScreen> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          registerForm.obscurePassword 
+                            ? Icons.visibility 
+                            : Icons.visibility_off
+                        ),
+                        onPressed: () => registerForm.togglePasswordVisibility(),
+                      )
                     ),
+                    onChanged: (value) => registerForm.password = value,
+                    validator: (value) {
+                      return (value != null && value.length >= 6)
+                          ? null
+                          : 'La contraseña debe tener 6 caracteres';
+                    },
                   ),
                   const SizedBox(height: 20),
 
-                  // Repetir contraseña
-                  TextField(
-                    controller: repeatPasswordController,
-                    obscureText: true,
+                  // ------------------------------------------------
+                  // INPUT REPEAT PASSWORD
+                  // ------------------------------------------------
+                  TextFormField(
+                    autocorrect: false,
+                    obscureText: registerForm.obscurePassword,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock_outline),
                       labelText: "Repetir contraseña",
@@ -99,10 +142,21 @@ class _SignupScreenState extends State<SignupScreen> {
                         borderSide: BorderSide.none,
                       ),
                     ),
+                    // Guardamos también este valor para futuras comprobaciones si hicieran falta
+                    onChanged: (value) => registerForm.confirmPassword = value,
+                    // VALIDACIÓN ESPECIAL: Comparamos con la contraseña guardada en el provider
+                    validator: (value) {
+                      if (value != registerForm.password) {
+                        return 'Las contraseñas no coinciden';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 30),
 
-                  // Botón crear cuenta
+                  // ------------------------------------------------
+                  // BOTÓN CREAR CUENTA
+                  // ------------------------------------------------
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF4B95B),
@@ -115,50 +169,50 @@ class _SignupScreenState extends State<SignupScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onPressed: () async{
-                      String user = usernameController.text;
-                      String pass = passwordController.text;
-                      String pass2 = repeatPasswordController.text;
+                    // Deshabilitar si está cargando
+                    onPressed: registerForm.isLoading
+                        ? null
+                        : () async {
+                            // 1. Quitar teclado
+                            FocusScope.of(context).unfocus();
 
-                      if (user.isEmpty || pass.isEmpty || pass2.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Rellena todos los campos"),
-                          ),
-                        );
-                        return;
-                      }
+                            // 2. Obtener servicio de autenticación
+                            final authService = Provider.of<AuthService>(context, listen: false);
 
-                      if (pass != pass2) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Las contraseñas no coinciden"),
-                          ),
-                        );
-                        return;
-                      }
+                            // 3. Ejecutar submit en el Provider del formulario
+                            final bool success = await registerForm.onFormSubmit(authService);
 
-                      bool success = await auth.register(user, pass);
-                      print("Signup success: $success");
-                      if (!success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Error al crear la cuenta"),
-                          ),
-                        );
-                        return;
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Cuenta creada correctamente"),
-                        ),
-                      );
-                    },
-                    child: const Text("Crear usuario"),
+                            if (success) {
+                              // Mostrar éxito y volver al login
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Cuenta creada correctamente"),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                              // Volvemos atrás (al Login)
+                              Navigator.pop(context);
+                            } else {
+                              // Mostrar error
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Error al crear la cuenta (Email en uso o error de red)"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                    child: Text(
+                      registerForm.isLoading ? 'Registrando...' : "Crear usuario"
+                    ),
                   ),
                   const SizedBox(height: 12),
 
-                  // Cancelar
+                  // ------------------------------------------------
+                  // BOTÓN CANCELAR
+                  // ------------------------------------------------
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -175,13 +229,12 @@ class _SignupScreenState extends State<SignupScreen> {
                     },
                     child: const Text(
                       "Cancelar",
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 18, color: Color(0xFFF4B95B)),
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Texto decorativo
                   const Center(
                     child: Text(
                       "¡Bienvenido a PeluqueriApp!",

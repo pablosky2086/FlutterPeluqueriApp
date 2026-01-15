@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_peluqueriapp/screens/menu_screen.dart';
-import 'package:flutter_peluqueriapp/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_peluqueriapp/providers/auth_provider.dart';
-import 'package:provider/provider.dart';
 
 void main() async {
   // Cargar environment variables
