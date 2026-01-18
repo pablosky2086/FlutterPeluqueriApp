@@ -62,7 +62,10 @@ class AgendaService {
 
   // 3. Obtener HORAS (AgendaResponseDTO)
   // Devuelve un mapa de Hora -> Disponible(true/false)
-  Future<Map<String, bool>> getHorasDisponibles({
+  // En lib/services/agenda_service.dart
+
+  // Devuelve: "10:00" -> {"disponible": true, "agendaId": 5}
+  Future<Map<String, Map<String, dynamic>>> getHorasDisponibles({
     required int servicioId,
     int? grupoId,
     required DateTime fecha,
@@ -70,7 +73,6 @@ class AgendaService {
     final f = DateFormat('yyyy-MM-dd');
     String dateStr = f.format(fecha);
     
-    // Pedimos agendas solo de ese día
     String query = "servicio=$servicioId&desde=$dateStr&hasta=$dateStr";
     if (grupoId != null) query += "&grupo=$grupoId";
 
@@ -83,29 +85,39 @@ class AgendaService {
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
         
-        // Procesamos la respuesta para aplanar todas las horas de todas las agendas encontradas
-        // El backend devuelve 'horasDisponiblesEstado': {"2025-01-20T10:00:00": true}
-        Map<String, bool> horasFinales = {};
+        // Mapa final: "10:00" -> { disponible: true, agendaId: 123 }
+        Map<String, Map<String, dynamic>> horasInfo = {};
 
         for (var agenda in data) {
+          int agendaId = agenda['id']; // Capturamos el ID de la agenda
           Map<String, dynamic> horasMap = agenda['horasDisponiblesEstado'];
+          
           horasMap.forEach((key, value) {
-            // key es "2025-01-20T10:00:00", extraemos solo la hora "10:00"
+            // key es "2025-01-20T10:00:00"
             DateTime fullDate = DateTime.parse(key);
             String horaSimple = DateFormat('HH:mm').format(fullDate);
+            bool isAvailable = value == true;
+
+            // Lógica de prioridad:
+            // Si la hora ya existe en el mapa:
+            // 1. Si la que teníamos NO estaba disponible y la nueva SÍ -> Nos quedamos con la nueva.
+            // 2. Si ya estaba disponible, no hace falta cambiar (cualquier agenda disponible nos vale).
+            // Si no existe, la añadimos.
             
-            // Si hay solapamiento de grupos, si uno está libre, mostramos libre (true)
-            if (horasFinales.containsKey(horaSimple)) {
-               if (value == true) horasFinales[horaSimple] = true; 
+            if (horasInfo.containsKey(horaSimple)) {
+               bool currentAvailable = horasInfo[horaSimple]!['disponible'];
+               if (!currentAvailable && isAvailable) {
+                 horasInfo[horaSimple] = {'disponible': true, 'agendaId': agendaId};
+               }
             } else {
-               horasFinales[horaSimple] = value;
+               horasInfo[horaSimple] = {'disponible': isAvailable, 'agendaId': agendaId};
             }
           });
         }
         
-        // Ordenamos las horas
-        var sortedKeys = horasFinales.keys.toList()..sort();
-        return {for (var k in sortedKeys) k: horasFinales[k]!};
+        // Ordenamos por hora para que salgan en orden (09:00, 09:30...)
+        var sortedKeys = horasInfo.keys.toList()..sort();
+        return {for (var k in sortedKeys) k: horasInfo[k]!};
       }
       return {};
     } catch (e) {

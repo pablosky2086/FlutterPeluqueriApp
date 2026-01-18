@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_peluqueriapp/services/cita_service.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -44,17 +45,42 @@ class _CitasContentState extends State<_CitasContent> {
   }
 
   Future<void> _reservar(BuildContext context, CitasProvider provider) async {
-    // Lógica simulada de reserva
+    if (provider.selectedHour == null || provider.selectedAgendaId == null) return;
+
+    // 1. Mostrar loading
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Cita reservada: ${provider.selectedService?.nombre} • "
-          "${DateFormat('dd/MM').format(provider.selectedDate)} • ${provider.selectedHour}"
-        ),
-        backgroundColor: Colors.green,
-      ),
+      const SnackBar(content: Text("Procesando reserva..."), duration: Duration(seconds: 1)),
     );
-    Navigator.pop(context);
+
+    // 2. Construir la fecha completa ISO8601
+    final datePart = DateFormat('yyyy-MM-dd').format(provider.selectedDate);
+    final fullDateISO = "${datePart}T${provider.selectedHour}:00";
+
+    // 3. Llamar al servicio
+    final citaService = CitaService();
+    final success = await citaService.createCita(
+      agendaId: provider.selectedAgendaId!,
+      fechaHoraInicio: fullDateISO,
+    );
+
+    if (!context.mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("¡Cita reservada con éxito!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context); // Volver al menú
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error al reservar. Inténtalo de nuevo."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -86,7 +112,7 @@ class _CitasContentState extends State<_CitasContent> {
                 children: [
                   
                   // ---------------------------
-                  // 1. SELECTOR DE SERVICIO (Estilo Original)
+                  // 1. SELECTOR DE SERVICIO
                   // ---------------------------
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -95,10 +121,7 @@ class _CitasContentState extends State<_CitasContent> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.orangeAccent,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: Colors.orangeAccent, width: 1.5),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<Servicio>(
@@ -111,10 +134,7 @@ class _CitasContentState extends State<_CitasContent> {
                               value: s,
                               child: Text(
                                 s.nombre,
-                                style: const TextStyle(
-                                  color: Colors.orangeAccent,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold),
                               ),
                             );
                           }).toList(),
@@ -125,7 +145,7 @@ class _CitasContentState extends State<_CitasContent> {
                   ),
 
                   // ---------------------------
-                  // 2. SELECTOR DE GRUPO (Nuevo widget con Estilo Original)
+                  // 2. SELECTOR DE GRUPO
                   // ---------------------------
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -134,10 +154,7 @@ class _CitasContentState extends State<_CitasContent> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.orangeAccent,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: Colors.orangeAccent, width: 1.5),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<Grupo?>(
@@ -155,10 +172,7 @@ class _CitasContentState extends State<_CitasContent> {
                               value: null,
                               child: Text(
                                 "Cualquier grupo",
-                                style: TextStyle(
-                                  color: Colors.orangeAccent,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold),
                               ),
                             ),
                             ...provider.grupos.map((g) {
@@ -166,10 +180,7 @@ class _CitasContentState extends State<_CitasContent> {
                                 value: g,
                                 child: Text(
                                   g.nombreCompleto,
-                                  style: const TextStyle(
-                                    color: Colors.orangeAccent,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold),
                                 ),
                               );
                             }),
@@ -180,13 +191,11 @@ class _CitasContentState extends State<_CitasContent> {
                   ),
 
                   // ---------------------------
-                  // 3. CALENDARIO (Estilo Original)
+                  // 3. CALENDARIO
                   // ---------------------------
                   Card(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: provider.diasDisponibles.isEmpty 
@@ -198,8 +207,6 @@ class _CitasContentState extends State<_CitasContent> {
                           initialDate: provider.selectedDate,
                           firstDate: DateTime.now().subtract(const Duration(days: 1)),
                           lastDate: DateTime.now().add(const Duration(days: 90)),
-                          
-                          // Lógica de bloqueo de días (Backend)
                           selectableDayPredicate: (day) {
                              if (day.isBefore(DateTime.now().subtract(const Duration(days: 1)))) return false;
                              return provider.diasDisponibles.any((d) => isSameDay(d, day));
@@ -212,7 +219,7 @@ class _CitasContentState extends State<_CitasContent> {
                   const SizedBox(height: 8),
 
                   // ---------------------------
-                  // 4. TÍTULO HORAS (Estilo Original)
+                  // 4. GRID DE HORAS
                   // ---------------------------
                   if (provider.diasDisponibles.isNotEmpty) ...[
                     Padding(
@@ -234,10 +241,7 @@ class _CitasContentState extends State<_CitasContent> {
                     ),
                     const SizedBox(height: 10),
 
-                    // ---------------------------
-                    // 5. GRID DE HORAS (Estilo Original)
-                    // ---------------------------
-                    provider.horasDisponibles.isEmpty
+                    provider.horasInfo.isEmpty
                       ? const Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Text("No hay horas disponibles", style: TextStyle(color: Colors.grey)),
@@ -251,12 +255,13 @@ class _CitasContentState extends State<_CitasContent> {
                               crossAxisCount: 4,
                               crossAxisSpacing: 8,
                               mainAxisSpacing: 8,
-                              childAspectRatio: 2.5, // Ratio original
+                              childAspectRatio: 2.5,
                             ),
-                            itemCount: provider.horasDisponibles.length,
+                            itemCount: provider.horasInfo.length, // Usamos la nueva variable del Provider
                             itemBuilder: (context, index) {
-                              final horaKey = provider.horasDisponibles.keys.elementAt(index);
-                              final isAvailable = provider.horasDisponibles.values.elementAt(index);
+                              final horaKey = provider.horasInfo.keys.elementAt(index);
+                              final info = provider.horasInfo.values.elementAt(index);
+                              final isAvailable = info['disponible'] as bool;
                               final isSelected = provider.selectedHour == horaKey;
 
                               return GestureDetector(
@@ -264,9 +269,6 @@ class _CitasContentState extends State<_CitasContent> {
                                 child: Container(
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    // Si seleccionado: Naranja relleno
-                                    // Si disponible no seleccionado: Blanco con borde naranja
-                                    // Si no disponible: Gris claro
                                     color: isSelected 
                                         ? Colors.orangeAccent 
                                         : (isAvailable ? Colors.white : Colors.grey[200]),
@@ -281,7 +283,6 @@ class _CitasContentState extends State<_CitasContent> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      // Texto blanco si seleccionado, Naranja si disponible, Gris si ocupado
                                       color: isSelected 
                                           ? Colors.white 
                                           : (isAvailable ? Colors.orangeAccent : Colors.grey),
@@ -299,21 +300,17 @@ class _CitasContentState extends State<_CitasContent> {
           ),
 
           // ---------------------------
-          // 6. BARRA INFERIOR (Con SafeArea + Info de Grupo)
+          // 6. BARRA INFERIOR (CORREGIDA)
           // ---------------------------
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
               color: Colors.white,
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black12, 
-                  blurRadius: 4, 
-                  offset: Offset(0, -2),
-                )
+                BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
               ],
             ),
-            child: SafeArea(
+            child: SafeArea( // ⭐ SafeArea añadido aquí para proteger el botón
               top: false, 
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -322,9 +319,8 @@ class _CitasContentState extends State<_CitasContent> {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min, // Ajuste para evitar espacios extra
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Nombre del Servicio
                           Text(
                             provider.selectedService?.nombre ?? "",
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -332,12 +328,10 @@ class _CitasContentState extends State<_CitasContent> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          // Detalles: Fecha • Hora • Grupo
+                          // Texto del resumen
                           Text(
                             provider.selectedHour == null
-                                // Sin hora seleccionada
                                 ? "${DateFormat('dd/MM').format(provider.selectedDate)} • ${provider.selectedGrupo?.nombreCompleto ?? 'Cualquier grupo'}"
-                                // Con hora seleccionada
                                 : "${DateFormat('dd/MM').format(provider.selectedDate)} • ${provider.selectedHour} • ${provider.selectedGrupo?.nombreCompleto ?? 'Cualquier grup.'}",
                             style: const TextStyle(color: Colors.black54, fontSize: 13),
                             maxLines: 2,
