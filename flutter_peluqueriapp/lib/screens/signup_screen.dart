@@ -177,7 +177,8 @@ class _RegisterFormContent extends StatelessWidget {
                             FocusScope.of(context).unfocus();
 
                             // 2. Obtener servicio de autenticación
-                            final authService = Provider.of<AuthService>(context, listen: false);
+                            //final authService = Provider.of<AuthService>(context, listen: false);
+                            final authService = AuthService();
 
                             // 3. Ejecutar submit en el Provider del formulario
                             final bool success = await registerForm.onFormSubmit(authService);

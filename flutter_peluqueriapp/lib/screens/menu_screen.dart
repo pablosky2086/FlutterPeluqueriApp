@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'servicios_screen.dart';
 import 'clientes_screen.dart';
 import 'citas_screen.dart';
+import 'mis_citas_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -122,6 +123,24 @@ class MenuScreen extends StatelessWidget {
                       );
                     },
                     child: const Text("Perfil / Cliente", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // NUEVO BOTÓN
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF4B95B),
+                      minimumSize: const Size(double.infinity, 55),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MisCitasScreen()),
+                      );
+                    },
+                    child: const Text("Mis Citas", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ),
 
                   const Spacer(flex: 3),
