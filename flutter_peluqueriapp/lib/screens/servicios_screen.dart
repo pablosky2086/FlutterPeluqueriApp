@@ -1,97 +1,39 @@
-// lib/screens/servicios_screen.dart
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 
+// Importamos Modelos y Provider
 import 'package:flutter_peluqueriapp/models/servicio_model.dart';
 import 'package:flutter_peluqueriapp/models/tipo_servicio_model.dart';
-import 'package:flutter_peluqueriapp/services/servicio_service.dart';
-import 'package:flutter_peluqueriapp/services/tipo_servicio_service.dart';
+import 'package:flutter_peluqueriapp/providers/servicios_provider.dart';
 import 'package:flutter_peluqueriapp/screens/citas_screen.dart';
 
-class ServiciosScreen extends StatefulWidget {
+class ServiciosScreen extends StatelessWidget {
   const ServiciosScreen({super.key});
 
   @override
-  State<ServiciosScreen> createState() => _ServiciosScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ServicesProvider(),
+      child: const _ServiciosContent(),
+    );
+  }
 }
 
-class _ServiciosScreenState extends State<ServiciosScreen> {
-  final ServicioService _servicioService = ServicioService();
-  final TipoServicioService _tipoServicioService = TipoServicioService();
-
-  List<TipoServicio> tipos = [];
-  List<Servicio> servicios = [];
-  Map<int, List<Servicio>> agrupados = {};
-
-  bool loading = true;
-
-  // Buscador
-  final TextEditingController _searchController = TextEditingController();
-  List<Servicio> resultadosBusqueda = [];
-  bool buscadorActivo = false;
-  Timer? _debounce;
-
-  @override
-  void initState() {
-    super.initState();
-    _cargarDatos();
-  }
-
-  Future<void> _cargarDatos() async {
-    final listaTipos = await _tipoServicioService.getTipos();
-    final listaServicios = await _servicioService.getServicios();
-
-    setState(() {
-      tipos = listaTipos;
-      servicios = listaServicios;
-      agrupados = _agruparServicios(listaServicios);
-      loading = false;
-    });
-  }
-
-  Map<int, List<Servicio>> _agruparServicios(List<Servicio> lista) {
-    final mapa = <int, List<Servicio>>{};
-    for (var s in lista) {
-      mapa.putIfAbsent(s.tipoId, () => []);
-      mapa[s.tipoId]!.add(s);
-    }
-    return mapa;
-  }
-
-  void _onSearchChanged(String value) {
-    // debounce suave para no spamear la API
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    _debounce = Timer(const Duration(milliseconds: 350), () async {
-      final query = value.trim();
-
-      if (query.isEmpty) {
-        setState(() {
-          buscadorActivo = false;
-          resultadosBusqueda = [];
-        });
-        return;
-      }
-
-      final res = await _servicioService.buscarServiciosPorNombre(query);
-      setState(() {
-        buscadorActivo = true;
-        resultadosBusqueda = res;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _debounce?.cancel();
-    super.dispose();
-  }
+class _ServiciosContent extends StatelessWidget {
+  const _ServiciosContent();
 
   @override
   Widget build(BuildContext context) {
+    final servicesProvider = Provider.of<ServicesProvider>(context);
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Servicios", style: TextStyle(color: Colors.orangeAccent)),
+        backgroundColor: const Color(0xFFFFF3E0),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.orangeAccent),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -101,31 +43,19 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
           ),
         ),
         child: SafeArea(
-          child: loading
-              ? const Center(child: CircularProgressIndicator())
+          child: servicesProvider.isLoading
+              ? const Center(child: CircularProgressIndicator(color: Colors.orangeAccent))
               : Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Servicios",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orangeAccent,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // 🔍 Buscador
+                      // BUSCADOR
                       TextField(
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
+                        controller: servicesProvider.searchController,
+                        onChanged: servicesProvider.onSearchChanged,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: const Icon(Icons.search, color: Colors.orangeAccent),
                           hintText: "Buscar servicio...",
                           filled: true,
                           fillColor: Colors.white,
@@ -138,11 +68,11 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Contenido (resultados o lista por tipos)
+                      // LISTA DE RESULTADOS
                       Expanded(
-                        child: buscadorActivo
-                            ? _buildResultadosBusqueda()
-                            : _buildListaPorTipos(),
+                        child: servicesProvider.isSearching
+                            ? _buildResultadosBusqueda(context, servicesProvider)
+                            : _buildListaPorTipos(context, servicesProvider),
                       ),
                     ],
                   ),
@@ -152,54 +82,80 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
     );
   }
 
-  // Lista cuando hay búsqueda
-  Widget _buildResultadosBusqueda() {
-  if (resultadosBusqueda.isEmpty) {
-    return const Center(
-      child: Text(
-        "No se han encontrado servicios",
-        style: TextStyle(fontSize: 16, color: Colors.black54),
-      ),
+  // Widget para mostrar resultados de búsqueda
+  Widget _buildResultadosBusqueda(BuildContext context, ServicesProvider provider) {
+    if (provider.searchResults.isEmpty) {
+      return const Center(
+        child: Text(
+          "No se han encontrado servicios",
+          style: TextStyle(fontSize: 16, color: Colors.black54),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 8),
+      itemCount: provider.searchResults.length,
+      itemBuilder: (_, i) {
+        final s = provider.searchResults[i];
+        return Card(
+          color: const Color(0xFFFFFAF0),
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: _buildServicioTile(context, s, provider.allServices),
+        );
+      },
     );
   }
 
-  return ListView.builder(
-    padding: const EdgeInsets.only(top: 8),
-    itemCount: resultadosBusqueda.length,
-    itemBuilder: (_, i) {
-      final s = resultadosBusqueda[i];
-      return Card(
-        color: const Color(0xFFFFFAF0),
-        elevation: 4,
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: _buildServicioTile(s),
-      );
-    },
-  );
-}
-
-
-  // Lista normal por tipos
-  Widget _buildListaPorTipos() {
+  // ⭐ Widget para mostrar la lista agrupada (CON AUTO-SCROLL)
+  Widget _buildListaPorTipos(BuildContext context, ServicesProvider provider) {
     return ListView.builder(
-      itemCount: tipos.length,
+      padding: const EdgeInsets.only(bottom: 20),
+      itemCount: provider.types.length,
       itemBuilder: (_, i) {
-        final tipo = tipos[i];
-        final serviciosDeEsteTipo = agrupados[tipo.id] ?? [];
+        final tipo = provider.types[i];
+        final serviciosDeEsteTipo = provider.groupedServices[tipo.id] ?? [];
+
+        if (serviciosDeEsteTipo.isEmpty) return const SizedBox.shrink();
 
         return Card(
+          // ⭐ ASIGNAMOS LA KEY AQUÍ PARA LOCALIZAR LA TARJETA
+          key: provider.getKey(tipo.id),
+          
           color: const Color(0xFFFFFAF0),
           margin: const EdgeInsets.only(bottom: 16),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
+              controller: provider.getController(tipo.id),
+              
+              // Lógica de apertura y scroll
+              onExpansionChanged: (isOpen) {
+                if (isOpen) {
+                  // 1. Cerrar los demás
+                  provider.expandType(tipo.id);
+                  
+                  // 2. ⭐ AUTO-SCROLL
+                  // Esperamos 300ms a que termine la animación de apertura
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    // Verificamos que el contexto de la Key siga siendo válido
+                    final currentContext = provider.getKey(tipo.id).currentContext;
+                    if (currentContext != null) {
+                      Scrollable.ensureVisible(
+                        currentContext,
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                        alignment: 0.0, // 0.0 alinea el elemento arriba del todo
+                      );
+                    }
+                  });
+                }
+              },
+
               leading: _buildTipoImage(tipo),
               title: Text(
                 tipo.nombre,
@@ -209,7 +165,9 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
                   color: Colors.orangeAccent,
                 ),
               ),
-              children: serviciosDeEsteTipo.map(_buildServicioTile).toList(),
+              children: serviciosDeEsteTipo
+                  .map((s) => _buildServicioTile(context, s, provider.allServices))
+                  .toList(),
             ),
           ),
         );
@@ -217,6 +175,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
     );
   }
 
+  // Imagen del tipo de servicio
   Widget _buildTipoImage(TipoServicio tipo) {
     final baseUrl = dotenv.env['API_URL'] ?? '';
     return ClipRRect(
@@ -227,50 +186,41 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         height: 40,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) =>
-            const Icon(Icons.image, color: Colors.orangeAccent),
+            const Icon(Icons.category, color: Colors.orangeAccent),
       ),
     );
   }
 
-  // Tile de un servicio (tanto para resultados como dentro de un tipo)
-  Widget _buildServicioTile(Servicio s) {
-  return ListTile(
-    title: Text(
-      s.nombre,
-      style: const TextStyle(
-        color: Colors.orangeAccent,
-        fontWeight: FontWeight.bold,
+  // Tile individual de cada servicio
+  Widget _buildServicioTile(BuildContext context, Servicio s, List<Servicio> allServices) {
+    return ListTile(
+      title: Text(
+        s.nombre,
+        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
       ),
-    ),
-    subtitle: Text("${s.precio} € • ${s.duracion} min"),
-    trailing: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFF4B95B),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+      subtitle: Text(
+        "${s.precio} € • ${s.duracion} min",
+        style: const TextStyle(color: Colors.black54),
+      ),
+      trailing: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFF4B95B),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-      ),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CitasScreen(
-              services: servicios,      // ← lista completa
-              initialService: s,        // ← servicio seleccionado
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CitasScreen(
+                services: allServices,
+                initialService: s,
+              ),
             ),
-          ),
-        );
-      },
-      child: const Text(
-        "Reservar",
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
+          );
+        },
+        child: const Text("Reservar", style: TextStyle(color: Colors.white)),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
