@@ -102,4 +102,27 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear(); 
   }
+
+  // Método para solicitar recuperación de contraseña
+  Future<bool> requestPasswordReset(String email) async {
+    // Construimos la URL con el parámetro query 'email'
+    // Tu backend: @PostMapping("/forgot-password") public String solicitarReset(@RequestParam String email)
+    final url = Uri.parse('$_baseUrl/api/auth/forgot-password')
+        .replace(queryParameters: {'email': email});
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      print("RESET PASSWORD status: ${response.statusCode}");
+      
+      // Tu backend devuelve un String plano, no un JSON, así que solo miramos el status 200
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error solicitando reset password: $e");
+      return false;
+    }
+  }
 }
