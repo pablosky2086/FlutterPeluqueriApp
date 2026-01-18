@@ -1,63 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_peluqueriapp/models/servicio_model.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
-class CitasScreen extends StatefulWidget {
+// Importaciones del proyecto
+import 'package:flutter_peluqueriapp/models/servicio_model.dart';
+import 'package:flutter_peluqueriapp/models/grupo_model.dart';
+import 'package:flutter_peluqueriapp/providers/citas_provider.dart';
+
+class CitasScreen extends StatelessWidget {
   final List<Servicio> services;
   final Servicio? initialService;
 
-  const CitasScreen({super.key, required this.services, this.initialService});
+  const CitasScreen({
+    super.key,
+    required this.services,
+    this.initialService,
+  });
 
   @override
-  State<CitasScreen> createState() => _CitasScreenState();
+  Widget build(BuildContext context) {
+    // Inicializamos el Provider con el servicio seleccionado
+    return ChangeNotifierProvider(
+      create: (_) => CitasProvider()..init(initialService ?? services.first),
+      child: _CitasContent(allServices: services),
+    );
+  }
 }
 
-class _CitasScreenState extends State<CitasScreen> {
-  late Servicio selectedService;
-  DateTime selectedDay = DateTime.now();
-  String? selectedHour;
-
-  /// HORARIOS MOCK (solo para boceto)
-  final Map<int, List<String>> mockSchedule = {
-    1: ["09:00", "09:30", "10:00", "10:30"],
-    2: ["11:00", "11:30", "12:00", "12:30"],
-    3: ["16:00", "16:30", "17:00"],
-    4: ["08:00", "08:30", "09:00"],
-    5: ["15:00", "15:30", "16:00", "16:30"],
-    6: ["10:00", "11:00", "12:00"],
-    7: ["17:00", "17:30", "18:00"],
-    8: ["09:00", "10:00", "11:00"],
-  };
-
-  final Map<int, String> weekdays = {
-    1: "Lunes",
-    2: "Martes",
-    3: "Miércoles",
-    4: "Jueves",
-    5: "Viernes",
-    6: "Sábado",
-    7: "Domingo",
-  };
+class _CitasContent extends StatefulWidget {
+  final List<Servicio> allServices;
+  const _CitasContent({required this.allServices});
 
   @override
-  void initState() {
-    super.initState();
-    selectedService = widget.initialService ?? widget.services.first;
+  State<_CitasContent> createState() => _CitasContentState();
+}
+
+class _CitasContentState extends State<_CitasContent> {
+  
+  // Función auxiliar para saber si dos fechas son el mismo día
+  bool isSameDay(DateTime? a, DateTime? b) {
+    if (a == null || b == null) return false;
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  List<String> get availableHours {
-    return mockSchedule[selectedService.tipoId] ?? [];
-  }
-
-  List<Servicio> get serviciosMismoTipo {
-    return widget.services
-        .where((s) => s.tipoId == selectedService.tipoId)
-        .toList();
+  Future<void> _reservar(BuildContext context, CitasProvider provider) async {
+    // Lógica simulada de reserva
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Cita reservada: ${provider.selectedService?.nombre} • "
+          "${DateFormat('dd/MM').format(provider.selectedDate)} • ${provider.selectedHour}"
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CitasProvider>(context);
+
+    // Filtramos servicios del mismo tipo
+    final serviciosMismoTipo = widget.allServices
+        .where((s) => s.tipoId == provider.selectedService?.tipoId)
+        .toList();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFDEBCF),
+      backgroundColor: const Color(0xFFFDEBCF), // Color de fondo original
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -67,7 +77,6 @@ class _CitasScreenState extends State<CitasScreen> {
           style: TextStyle(color: Colors.orangeAccent),
         ),
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -75,19 +84,14 @@ class _CitasScreenState extends State<CitasScreen> {
               padding: const EdgeInsets.only(bottom: 16),
               child: Column(
                 children: [
+                  
                   // ---------------------------
-                  // SELECTOR DE SERVICIO
+                  // 1. SELECTOR DE SERVICIO (Estilo Original)
                   // ---------------------------
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -96,221 +100,277 @@ class _CitasScreenState extends State<CitasScreen> {
                           width: 1.5,
                         ),
                       ),
-                      child: DropdownButton<Servicio>(
-                        value: selectedService,
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        itemHeight: 60,
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.orangeAccent,
-                        ),
-
-                        items: serviciosMismoTipo.map((s) {
-                          return DropdownMenuItem(
-                            value: s,
-                            child: Text(
-                              s.nombre,
-                              style: const TextStyle(
-                                color: Colors.orangeAccent,
-                                fontWeight: FontWeight.bold,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<Servicio>(
+                          value: provider.selectedService,
+                          isExpanded: true,
+                          itemHeight: 60,
+                          icon: const Icon(Icons.arrow_drop_down, color: Colors.orangeAccent),
+                          items: serviciosMismoTipo.map((s) {
+                            return DropdownMenuItem(
+                              value: s,
+                              child: Text(
+                                s.nombre,
+                                style: const TextStyle(
+                                  color: Colors.orangeAccent,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          );
-                        }).toList(),
-
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedService = value;
-                              selectedHour = null;
-                            });
-                          }
-                        },
+                            );
+                          }).toList(),
+                          onChanged: provider.setService,
+                        ),
                       ),
                     ),
                   ),
 
                   // ---------------------------
-                  // CALENDARIO
+                  // 2. SELECTOR DE GRUPO (Nuevo widget con Estilo Original)
+                  // ---------------------------
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.orangeAccent,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<Grupo?>(
+                          value: provider.selectedGrupo,
+                          isExpanded: true,
+                          itemHeight: 60,
+                          icon: const Icon(Icons.arrow_drop_down, color: Colors.orangeAccent),
+                          hint: Text(
+                             provider.grupos.isEmpty ? "Cargando..." : "Cualquier grupo",
+                             style: const TextStyle(color: Colors.grey),
+                          ),
+                          onChanged: provider.grupos.isEmpty ? null : provider.setGrupo,
+                          items: [
+                            const DropdownMenuItem<Grupo?>(
+                              value: null,
+                              child: Text(
+                                "Cualquier grupo",
+                                style: TextStyle(
+                                  color: Colors.orangeAccent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ...provider.grupos.map((g) {
+                              return DropdownMenuItem<Grupo?>(
+                                value: g,
+                                child: Text(
+                                  g.nombreCompleto,
+                                  style: const TextStyle(
+                                    color: Colors.orangeAccent,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ---------------------------
+                  // 3. CALENDARIO (Estilo Original)
                   // ---------------------------
                   Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: CalendarDatePicker(
-                        initialDate: selectedDay,
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-
-                        // 🚫 DESACTIVA FINES DE SEMANA Y DÍAS PASADOS
-                        selectableDayPredicate: (day) {
-                          // Desactivar días pasados
-                          if (day.isBefore(
-                            DateTime.now().subtract(const Duration(days: 1)),
-                          )) {
-                            return false;
-                          }
-
-                          // weekday: 1=Lunes ... 7=Domingo
-                          if (day.weekday == DateTime.saturday ||
-                              day.weekday == DateTime.sunday) {
-                            return false;
-                          }
-
-                          return true; // Se puede seleccionar
-                        },
-
-                        onDateChanged: (date) {
-                          setState(() {
-                            selectedDay = date;
-                            selectedHour = null;
-                          });
-                        },
-                      ),
+                      child: provider.diasDisponibles.isEmpty 
+                        ? const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
+                          )
+                        : CalendarDatePicker(
+                          initialDate: provider.selectedDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                          lastDate: DateTime.now().add(const Duration(days: 90)),
+                          
+                          // Lógica de bloqueo de días (Backend)
+                          selectableDayPredicate: (day) {
+                             if (day.isBefore(DateTime.now().subtract(const Duration(days: 1)))) return false;
+                             return provider.diasDisponibles.any((d) => isSameDay(d, day));
+                          },
+                          onDateChanged: provider.setDate,
+                        ),
                     ),
                   ),
 
                   const SizedBox(height: 8),
 
                   // ---------------------------
-                  // TITULO HORAS DISPONIBLES
+                  // 4. TÍTULO HORAS (Estilo Original)
                   // ---------------------------
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.access_time, color: Colors.orangeAccent),
-                        SizedBox(width: 8),
-                        Text(
-                          "Horas disponibles",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orangeAccent,
+                  if (provider.diasDisponibles.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.access_time, color: Colors.orangeAccent),
+                          SizedBox(width: 8),
+                          Text(
+                            "Horas disponibles",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orangeAccent,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                  // ---------------------------
-                  // LISTA DE HORAS
-                  // ---------------------------
-                  availableHours.isEmpty
-                      ? const Text(
-                          "No hay horas disponibles",
-                          style: TextStyle(color: Colors.grey),
+                    // ---------------------------
+                    // 5. GRID DE HORAS (Estilo Original)
+                    // ---------------------------
+                    provider.horasDisponibles.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text("No hay horas disponibles", style: TextStyle(color: Colors.grey)),
                         )
                       : Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: GridView.count(
+                          child: GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                            childAspectRatio: 2.5,
-                            children: availableHours.map((h) {
-                              final bool isSel = h == selectedHour;
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                              childAspectRatio: 2.5, // Ratio original
+                            ),
+                            itemCount: provider.horasDisponibles.length,
+                            itemBuilder: (context, index) {
+                              final horaKey = provider.horasDisponibles.keys.elementAt(index);
+                              final isAvailable = provider.horasDisponibles.values.elementAt(index);
+                              final isSelected = provider.selectedHour == horaKey;
+
                               return GestureDetector(
-                                onTap: () => setState(() => selectedHour = h),
+                                onTap: isAvailable ? () => provider.setHour(horaKey) : null,
                                 child: Container(
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: isSel
-                                        ? Colors.orangeAccent
-                                        : Colors.white,
+                                    // Si seleccionado: Naranja relleno
+                                    // Si disponible no seleccionado: Blanco con borde naranja
+                                    // Si no disponible: Gris claro
+                                    color: isSelected 
+                                        ? Colors.orangeAccent 
+                                        : (isAvailable ? Colors.white : Colors.grey[200]),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: Colors.orangeAccent,
+                                      color: isAvailable ? Colors.orangeAccent : Colors.grey[300]!,
                                       width: 1.5,
                                     ),
                                   ),
                                   child: Text(
-                                    h,
+                                    horaKey,
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: isSel
-                                          ? Colors.white
-                                          : Colors.orangeAccent,
+                                      // Texto blanco si seleccionado, Naranja si disponible, Gris si ocupado
+                                      color: isSelected 
+                                          ? Colors.white 
+                                          : (isAvailable ? Colors.orangeAccent : Colors.grey),
                                     ),
                                   ),
                                 ),
                               );
-                            }).toList(),
+                            },
                           ),
                         ),
+                  ]
                 ],
               ),
             ),
           ),
 
           // ---------------------------
-          // BARRA INFERIOR DE CONFIRMACIÓN
+          // 6. BARRA INFERIOR (Con SafeArea + Info de Grupo)
           // ---------------------------
           Container(
-            margin: const EdgeInsets.only(bottom: 50),
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedService.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        selectedHour == null
-                            ? "${selectedDay.day}/${selectedDay.month}"
-                            : "${selectedDay.day}/${selectedDay.month} • $selectedHour",
-                        style: const TextStyle(color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                ),
-
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedHour == null
-                        ? Colors.grey
-                        : Colors.orangeAccent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                  ),
-                  onPressed: selectedHour == null
-                      ? null
-                      : () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "Cita reservada: ${selectedService.nombre} • ${selectedDay.day}/${selectedDay.month} • $selectedHour",
-                              ),
-                            ),
-                          );
-                        },
-                  child: const Text(
-                    "Confirmar",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12, 
+                  blurRadius: 4, 
+                  offset: Offset(0, -2),
+                )
               ],
+            ),
+            child: SafeArea(
+              top: false, 
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min, // Ajuste para evitar espacios extra
+                        children: [
+                          // Nombre del Servicio
+                          Text(
+                            provider.selectedService?.nombre ?? "",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            maxLines: 1, 
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          // Detalles: Fecha • Hora • Grupo
+                          Text(
+                            provider.selectedHour == null
+                                // Sin hora seleccionada
+                                ? "${DateFormat('dd/MM').format(provider.selectedDate)} • ${provider.selectedGrupo?.nombreCompleto ?? 'Cualquier grupo'}"
+                                // Con hora seleccionada
+                                : "${DateFormat('dd/MM').format(provider.selectedDate)} • ${provider.selectedHour} • ${provider.selectedGrupo?.nombreCompleto ?? 'Cualquier grup.'}",
+                            style: const TextStyle(color: Colors.black54, fontSize: 13),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: provider.selectedHour == null
+                            ? Colors.grey
+                            : Colors.orangeAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                      ),
+                      onPressed: provider.selectedHour == null
+                          ? null
+                          : () => _reservar(context, provider),
+                      child: const Text(
+                        "Confirmar",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -318,290 +378,3 @@ class _CitasScreenState extends State<CitasScreen> {
     );
   }
 }
-
-/*import 'package:flutter/material.dart';
-import 'servicios_screen.dart';
-
-class CitasScreen extends StatefulWidget {
-  final List<ServiceCategory> services;
-  final ServiceCategory? initialService;
-
-  const CitasScreen({
-    super.key,
-    required this.services,
-    this.initialService,
-  });
-
-  @override
-  State<CitasScreen> createState() => _CitasScreenState();
-}
-
-class _CitasScreenState extends State<CitasScreen> {
-  late ServiceCategory selectedService;
-  DateTime selectedDay = DateTime.now();
-  String? selectedHour;
-
-  final Map<int, String> weekdays = {
-    1: "Lunes",
-    2: "Martes",
-    3: "Miércoles",
-    4: "Jueves",
-    5: "Viernes",
-    6: "Sábado",
-    7: "Domingo",
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    selectedService = widget.initialService ?? widget.services.first;
-  }
-
-  List<String> get availableHours {
-    final key = weekdays[selectedDay.weekday]!;
-    return selectedService.schedule[key] ?? [];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-  backgroundColor: const Color(0xFFFDEBCF),
-  appBar: AppBar(
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    iconTheme: const IconThemeData(color: Colors.orangeAccent),
-    title: const Text(
-      "Reservar cita",
-      style: TextStyle(color: Colors.orangeAccent),
-    ),
-  ),
-  body: Column(
-    children: [
-
-      // 👇 TODO EL CONTENIDO QUE PUEDE CRECER VA AQUÍ
-      // 👇 LO ENVOLVEMOS EN EXPANDED
-      Expanded(  // <--- AQUÍ
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Column(
-            children: [
-              // --- aquí va todo tu contenido ---
-              // Dropdown
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orangeAccent, width: 1.5),
-                  ),
-                  child: DropdownButton<ServiceCategory>(
-                    itemHeight: 83,
-                    value: selectedService,
-                    isExpanded: true,
-                    icon: const Icon(Icons.arrow_drop_down, color: Colors.orangeAccent),
-                    underline: const SizedBox(),
-                    dropdownColor: Colors.white,
-                    menuMaxHeight: 800,
-                    items: widget.services.map((s) {
-                      return DropdownMenuItem<ServiceCategory>(
-                        value: s,
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                s.image,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Flexible(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    s.name,
-                                    style: const TextStyle(
-                                      color: Colors.orangeAccent,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "${s.price} € • ${s.duration}",
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (service) {
-                      if (service != null) {
-                        setState(() {
-                          selectedService = service;
-                          selectedHour = null;
-                        });
-                      }
-                    },
-                  ),
-                ),
-              ),
-
-              // Calendario
-              Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CalendarDatePicker(
-                    initialDate: selectedDay,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                    onDateChanged: (date) {
-                      setState(() {
-                        selectedDay = date;
-                        selectedHour = null;
-                      });
-                    },
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: const [
-                    Icon(Icons.access_time, color: Colors.orangeAccent),
-                    SizedBox(width: 8),
-                    Text(
-                      "Horas disponibles",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orangeAccent,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Horas disponibles
-              availableHours.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        "No hay horas disponibles para ${weekdays[selectedDay.weekday]}",
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 2.5,
-                        children: availableHours.map((h) {
-                          final bool isSel = h == selectedHour;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedHour = h;
-                              });
-                            },
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isSel ? Colors.orangeAccent : Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.orangeAccent, width: 1.5),
-                              ),
-                              child: Text(
-                                h,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSel ? Colors.white : Colors.orangeAccent,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-            ],
-          ),
-        ),
-      ),
-
-      // 🔥 ESTO QUEDA PEGADO ABAJO 🔥
-      Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        margin: const EdgeInsets.only(bottom: 50),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    selectedService.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    selectedHour == null
-                        ? "${selectedDay.day}/${selectedDay.month}"
-                        : "${selectedDay.day}/${selectedDay.month} • $selectedHour",
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: selectedHour == null ? Colors.grey : Colors.orangeAccent,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: selectedHour == null
-                  ? null
-                  : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Cita: ${selectedService.name} • ${selectedDay.day}/${selectedDay.month} • $selectedHour",
-                          ),
-                        ),
-                      );
-                    },
-              child: const Text(
-                "Confirmar",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            )
-          ],
-        ),
-      ),
-    ],
-  ),
-);
-  }
-}*/

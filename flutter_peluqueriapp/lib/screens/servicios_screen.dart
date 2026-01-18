@@ -156,7 +156,7 @@ class _ServiciosContent extends StatelessWidget {
                 }
               },
 
-              leading: _buildTipoImage(tipo),
+              //leading: _buildTipoImage(tipo),
               title: Text(
                 tipo.nombre,
                 style: const TextStyle(
@@ -176,7 +176,7 @@ class _ServiciosContent extends StatelessWidget {
   }
 
   // Imagen del tipo de servicio
-  Widget _buildTipoImage(TipoServicio tipo) {
+  /*Widget _buildTipoImage(TipoServicio tipo) {
     final baseUrl = dotenv.env['API_URL'] ?? '';
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
@@ -189,7 +189,7 @@ class _ServiciosContent extends StatelessWidget {
             const Icon(Icons.category, color: Colors.orangeAccent),
       ),
     );
-  }
+  }*/
 
   // Tile individual de cada servicio
   Widget _buildServicioTile(BuildContext context, Servicio s, List<Servicio> allServices) {
